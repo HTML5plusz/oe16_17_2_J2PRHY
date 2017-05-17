@@ -1,0 +1,259 @@
+<html>
+	<head>
+		<script src="../HTML5 beadandó/javascript/jquery/jquery-3.2.1.min.js"></script>
+		<script src="../HTML5 beadandó/javascript/jquery/jquery.cookie.js"></script>
+		<link rel="stylesheet" href="../HTML5 beadandó/javascript/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../HTML5 beadandó/javascript/bootstrap/css/bootstrap-theme.min.css">
+		<script src="../HTML5 beadandó/javascript/bootstrap/js/bootstrap.min.js"></script>
+		<script src="../HTML5 beadandó/javascript/storeip.js"></script>
+	</head>
+	<body>
+		<div class="jumbotron text-center">
+			<h1>Zsolti sportoldala</h1>
+			<nav class="navbar navbar-default">
+				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+					<ul class="nav navbar-nav">
+						<li class="active"><a href="index.html">Sport <span class="sr-only">(current)</span></a></li>
+						<li><a href="seria.html">Széria</a></li>
+					</ul>
+				</div>
+			</nav>
+		</div>
+		<div id="sportmodal" class="modal fade">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+						<h4 class="modal-title">Sport felvétele</h4>
+					</div>
+					<form id="sportaddform">
+						<div class="modal-body">
+							<table>
+								<tr>
+									<td>Név:</td>
+									<td><input name="nev" type="text" id="nevtext"></td>
+								</tr>
+								<tr>
+									<td>Leírás:</td>
+									<td><input name="leiras" type="text" id="leirastext"></td>
+								</tr>
+							</table>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">Bezárás</button>
+							<button type="button" class="btn btn-primary" onclick="mentes()">Mentés</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		<div id="ipmodal" class="modal fade">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+						<h4 class="modal-title">Backend szükséges</h4>
+					</div>
+					<form id="sportaddform">
+						<div class="modal-body">
+							<table>
+								<tr>
+									<td>IP:</td>
+									<td><input name="ip" type="text" id="iptext"></td>
+								</tr>
+							</table>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">Bezárás</button>
+							<button type="button" class="btn btn-primary" onclick="setip()">Mentés</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		<div class="container">
+			<div class = "panel panel-default">
+				<div class = "panel-body"> 
+					<h2>Sport adminisztráció</h2> 
+					<div class = "panel panel-default">
+						<div class = "panel-body">
+							<div class="row">
+								<div class="col-sm-3">
+									<p align="left">
+										<div class="input-group">
+											<h3>Keresés</h3> <input type="text" class="form-control" placeholder="Keresés" onkeyup="kereses(this)">
+										</div>
+									</p>
+								</div>
+								<div class="col-sm-3">
+								</div>
+								<div class="col-sm-3">
+								</div>
+								<div class="col-sm-3">
+									<p align="right">
+										<div class="input-group">
+											<span class="pull-right">
+												<h3>Sport hozzáadása</h3>
+												<input type="button" Value="Sport hozzáadása" onclick="showsportdialog()" class="form-control">
+											</span>
+										</div>
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div id = "tablediv">
+					
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script>
+		var sportok;
+		var szurtsportok;
+		$( document ).ready(function() {
+			var myip = $.cookie('ip');
+			if( typeof ip === 'undefined' || ip === null || ip==="" ){
+				showipdialog();
+			}
+			getSportData();
+			window.setInterval("getSportData()", 15000);
+		});
+		function menuvalt(clickedelement){
+			var allli = document.getElementsByTagName("li");
+			for(var i=0; i<allli.length;i++){
+				if(allli[i].value<4){
+					allli[i].classList.remove("active");
+				}
+			}
+			clickedelement.classList.add("active");
+				var tablazat="<table class=\"table table-striped\">";
+				window.setInterval("getSportData()", 15000);
+		}
+		function getSportData(){
+			$.ajax({
+					url: 'http://'+window.ip+':8080/sport/rest/sport/entity/all',
+					type: 'GET',
+					success: function(data, status) {
+						sportok=data;
+						tablamegjelenites(data);
+					}
+				});
+		}
+		function refreshSportData(){
+			$.ajax({
+					url: 'http://'+window.ip+':8080/sport/rest/sport/entity/all',
+					type: 'GET',
+					success: function(data, status) {
+						sportok=data;
+					}
+				});
+		}
+		function redirectreszletek(redirecttourl){
+			window.open(redirecttourl);
+		}
+		function kereses(entity){
+			szurtsportok = [];
+			for(i=0;i<sportok.length;i++){
+				if(sportok[i].name.indexOf(entity.value) !==-1){
+					szurtsportok.push(sportok[i]);
+				}
+			}
+			tablamegjelenites(szurtsportok);
+		}
+		function tablamegjelenites(data){
+			var tablediv = document.getElementById("tablediv");
+			while(tablediv.firstChild){
+				tablediv.removeChild(tablediv.firstChild);
+			}
+			var sportdb = data.length;
+			var tbl = document.createElement('table');
+			tbl.classList.add("table-striped");
+			tbl.classList.add("table");
+			var tablehead = document.createElement('thead');
+			var tablerow = document.createElement('tr');
+			var theadid = document.createElement('th');
+			var theadname = document.createElement('th');
+			var theaddesc = document.createElement('th');
+			var theadreszletek = document.createElement('th');
+			
+			theadid.appendChild(document.createTextNode("ID"));
+			theadname.appendChild(document.createTextNode("Név"));
+			theaddesc.appendChild(document.createTextNode("Leírás"));
+			theadreszletek.appendChild(document.createTextNode("Részletek"));
+			tablehead.appendChild(theadid);
+			tablehead.appendChild(theadname);
+			tablehead.appendChild(theaddesc);
+			tablehead.appendChild(theadreszletek);
+			tbl.appendChild(tablehead);
+			var tbody = document.createElement('tbody');
+			for(var i = 0;i<sportdb;i++){
+				var tr = document.createElement('tr');
+				
+				var idtd=document.createElement('td');
+				var nametd=document.createElement('td');
+				var desctd=document.createElement('td');
+				var buttontd=document.createElement('td');
+				
+				idtd.appendChild(document.createTextNode(data[i].id));
+				nametd.appendChild(document.createTextNode(data[i].name));
+				desctd.appendChild(document.createTextNode(data[i].description));
+				
+				var reszletekbutton=document.createElement("a");
+				reszletekbutton.appendChild(document.createTextNode("Részletek"));
+				reszletekbutton.setAttribute("href" ,"sportreszletek.html?sportid="+data[i].id);
+				reszletekbutton.setAttribute("target", "new");
+				buttontd.appendChild(reszletekbutton);
+				
+				tr.appendChild(idtd);
+				tr.appendChild(nametd);
+				tr.appendChild(desctd);
+				tr.appendChild(buttontd);
+				
+				tbody.appendChild(tr);
+			}
+			tbl.appendChild(tbody);
+			tablediv.appendChild(tbl);
+		}
+		
+		function showsportdialog(){
+			$("#sportmodal").modal('show');
+		}
+		function mentes(){			
+			var thing = new Array();
+			var dataString = $('#sportaddform').serialize();
+			thing = $('#sportaddform').serializeArray();
+			var dataJson = JSON.stringify($('#sportaddform').serialize());
+			var postdata = "{\"name\":\""+thing[0].value+"\",\"description\":\""+thing[1].value+"\"}";
+			var myip = $.cookie('ip');
+			$.ajax({
+					url: 'http://'+window.ip+':8080/sport/rest/sport/save',
+					type: 'POST',
+					beforeSend: function (xhr){ 
+						xhr.setRequestHeader('Authorization', makeBaseAuth('manager','admin')); 
+					},
+					dataType: 'json',
+					contentType: 'application/json',
+					data: postdata,
+					success: function(data, status) {
+						document.getElementById("nevtext").value="";
+						document.getElementById("leirastext").value="";
+						$('#sportmodal').modal('hide');
+						getSportData();
+					}
+			});
+		}
+		function makeBaseAuth(user, pswd){ 
+			var token = user + ':' + pswd;
+			var hash = "";
+			if (btoa) {
+				hash = btoa(token);
+			}
+			return "Basic " + hash;
+		}
+		function refresh(){
+			getSportData();
+		}
+	</script>
+</html>

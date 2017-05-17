@@ -1,0 +1,62 @@
+<html>
+	<head>
+		<script src="../HTML5 beadandó/javascript/jquery/jquery-3.2.1.min.js"></script>
+		<link rel="stylesheet" href="../HTML5 beadandó/javascript/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../HTML5 beadandó/javascript/bootstrap/css/bootstrap-theme.min.css">
+		<script src="../HTML5 beadandó/javascript/bootstrap/js/bootstrap.min.js"></script>
+		<script src="../HTML5 beadandó/javascript/AngularJS/angular.min.js"></script>
+	</head>
+	<body>
+		<div class="jumbotron text-center">
+			<h1>Zsolti sportoldala</h1>
+		</div>
+		<ul class="nav nav-tabs">
+			<li class="active" id="hometab" onclick="menuvalt(this)" value="0"><a href="#">Home</a></li>
+			<li id="menu1" onclick="menuvalt(this)" value="1"><a href="#">Menu 1</a></li>
+			<li id="menu2" onclick="menuvalt(this)" value="2"><a href="#">Menu 2</a></li>
+			<li id="menu3" onclick="menuvalt(this)" value="3"><a href="#">Menu 3</a></li>
+		</ul>
+		<div id="tablediv" class="container">
+		<table class="table table-hover table-striped">
+			<thead>
+				<tr>
+					<td>ID</td>
+					<td>Név</td>
+					<td>Leírás</td>
+				</tr>
+			</thead>
+			<tbody>
+				<div ng-repeat="sport in sportok track by $index">
+					<tr>
+						<td>sport.id</td>
+						<td>sport.name</td>
+						<td>sport.description</td>
+					</tr>
+				</div>
+			</tbody>
+		</div>
+	</body>
+	<script>
+		var sportok;
+		function menuvalt(clickedelement){
+			var allli = document.getElementsByTagName("li");
+			for(var i=0; i<allli.length;i++){
+				if(allli[i].value<4){
+					allli[i].classList.remove("active");
+				}
+			}
+			clickedelement.classList.add("active");
+				var tablazat="<table class=\"table table-striped\">";
+				$.ajax({
+					url: 'http://94.177.230.203:8080/sport/rest/sport/entity/all',
+					type: 'GET',
+					success: function(data, status) {
+						sportok=data;
+					}
+				});
+		}
+	</script>
+	<script>
+
+	</script>
+</html>

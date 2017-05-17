@@ -1,0 +1,203 @@
+<html>
+	<head>
+		<script src="../HTML5 beadandó/javascript/jquery/jquery-3.2.1.min.js"></script>
+		<link rel="stylesheet" href="../HTML5 beadandó/javascript/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../HTML5 beadandó/javascript/bootstrap/css/bootstrap-theme.min.css">
+		<script src="../HTML5 beadandó/javascript/bootstrap/js/bootstrap.min.js"></script>
+		<script src="../HTML5 beadandó/javascript/storeip.js"></script>
+	</head>
+	<body>
+		<script>
+			var QueryString = function () {
+			var query_string = {};
+			var query = window.location.search.substring(1);
+			var vars = query.split("&");
+				for (var i=0;i<vars.length;i++) {
+					var pair = vars[i].split("=");
+					if (typeof query_string[pair[0]] === "undefined") {
+						query_string[pair[0]] = decodeURIComponent(pair[1]);
+					} else if (typeof query_string[pair[0]] === "string") {
+						var arr = [ query_string[pair[0]],decodeURIComponent(pair[1]) ];
+						query_string[pair[0]] = arr;
+					} else {
+						query_string[pair[0]].push(decodeURIComponent(pair[1]));
+					}
+				} 
+				return query_string;
+			}();
+		</script>
+		<div class="jumbotron text-center">
+			<h1 id="sportnev">Sportnév</h1>
+		</div>
+		<ul class="nav nav-tabs">
+			<li class="active" id="hometab" onclick="menuvalt(this)" value="0"><a href="#">Részletek</a></li>
+			<li id="menu1" onclick="showspecializaciodialog()" value="1"><a href="#">Specializáció felvétele</a></li>
+		</ul>
+		<div id="tablediv" class="container">
+			
+		</div>
+		<div id="specmodal" class="modal fade">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+						<h4 class="modal-title">Specializáció felvétele</h4>
+					</div>
+					<form id="specaddform">
+						<div class="modal-body">
+							<table>
+								<tr>
+									<td>Név:</td>
+									<td><input name="nev" type="text" id="nevtext"></td>
+								</tr>
+								<tr>
+									<td>Leírás:</td>
+									<td><input name="leiras" type="text" id="leirastext"></td>
+								</tr>
+							</table>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">Bezárás</button>
+							<button type="button" class="btn btn-primary" onclick="mentes()">Mentés</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		<div id="ipmodal" class="modal fade">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+						<h4 class="modal-title">Backend szükséges</h4>
+					</div>
+					<form id="sportaddform">
+						<div class="modal-body">
+							<table>
+								<tr>
+									<td>IP:</td>
+									<td><input name="ip" type="text" id="iptext"></td>
+								</tr>
+							</table>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">Bezárás</button>
+							<button type="button" class="btn btn-primary" onclick="setip()">Mentés</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script>
+		$( document ).ready(function() {
+			if( typeof ip === 'undefined' || ip === null || ip==="" ){
+				showipdialog();
+			}
+			getExactSportData();
+			window.setInterval("getExactSportData()", 15000);
+		});
+		function showspecializaciodialog(){
+			$("#specmodal").modal('show');
+		}
+		function getExactSportData(){
+			$.ajax({
+					url: 'http://'+ip+':8080/sport/rest/sport/'+QueryString.sportid,
+					type: 'GET',
+					success: function(data, status) {
+						var tablediv = document.getElementById("tablediv");
+						while(tablediv.firstChild){
+							tablediv.removeChild(tablediv.firstChild);
+						}
+						var sportnev = document.getElementById("sportnev");
+						while(sportnev.firstChild){
+							sportnev.removeChild(sportnev.firstChild);
+						}
+						sportnev.appendChild(document.createTextNode(data.name));
+						var sportdb = data.specialization.length;
+						var tbl = document.createElement('table');
+						tbl.classList.add("table-striped");
+						tbl.classList.add("table");
+						var tablehead = document.createElement('thead');
+						var tablerow = document.createElement('tr');
+						var theadid = document.createElement('th');
+						var theadname = document.createElement('th');
+						var theaddesc = document.createElement('th');
+						var theadreszletek = document.createElement('th');
+						
+						theadid.appendChild(document.createTextNode("ID"));
+						theadname.appendChild(document.createTextNode("Név"));
+						theaddesc.appendChild(document.createTextNode("Leírás"));
+						theadreszletek.appendChild(document.createTextNode("Részletek"));
+						tablehead.appendChild(theadid);
+						tablehead.appendChild(theadname);
+						tablehead.appendChild(theaddesc);
+						tablehead.appendChild(theadreszletek);
+						tbl.appendChild(tablehead);
+						var tbody = document.createElement('tbody');
+						for(var i = 0;i<sportdb;i++){
+							var tr = document.createElement('tr');
+							
+							var idtd=document.createElement('td');
+							var nametd=document.createElement('td');
+							var desctd=document.createElement('td');
+							var buttontd=document.createElement('td');
+							
+							idtd.appendChild(document.createTextNode(data.specialization[i].id));
+							nametd.appendChild(document.createTextNode(data.specialization[i].name));
+							desctd.appendChild(document.createTextNode(data.specialization[i].description));
+							
+							var reszletekbutton=document.createElement("a");
+							reszletekbutton.appendChild(document.createTextNode("Részletek"));
+							reszletekbutton.setAttribute("href" ,"sportreszletek.html?sportid="+data.specialization[i].id);
+							reszletekbutton.setAttribute("target", "new");
+							buttontd.appendChild(reszletekbutton);
+							
+							tr.appendChild(idtd);
+							tr.appendChild(nametd);
+							tr.appendChild(desctd);
+							tr.appendChild(buttontd);
+							
+							tbody.appendChild(tr);
+						}
+						tbl.appendChild(tbody);
+						tablediv.appendChild(tbl);
+					}
+				});
+		}
+		function mentes(){
+			var thing = new Array();
+			var dataString = $('#specaddform').serialize();
+			thing = $('#specaddform').serializeArray();
+			var dataJson = JSON.stringify($('#specaddform').serialize());
+			var postdata = "{\"name\":\""+thing[0].value+"\",\"description\":\""+thing[1].value+"\",\"parendid\":"+QueryString.sportid+"}";
+			$.ajax({
+					url: 'http://'+ip+':8080/sport/rest/sportspecialization/save',
+					type: 'POST',
+					beforeSend: function (xhr){ 
+						xhr.setRequestHeader('Authorization', makeBaseAuth('manager','admin')); 
+					},
+					dataType: 'json',
+					contentType: 'application/json',
+					data: postdata,
+					success: function(data, status) {
+						document.getElementById("nevtext").value="";
+						document.getElementById("leirastext").value="";
+						$('#specmodal').modal('hide');
+						getExactSportData();
+					}
+			});
+		}
+		function makeBaseAuth(user, pswd){ 
+			var token = user + ':' + pswd;
+			var hash = "";
+			if (btoa) {
+				hash = btoa(token);
+			}
+			return "Basic " + hash;
+   }
+   function refresh(){
+	getExactSportData();
+   }
+	</script>
+</html>

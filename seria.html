@@ -1,0 +1,132 @@
+<html>
+	<head>
+		<script src="../HTML5 beadandó/javascript/jquery/jquery-3.2.1.min.js"></script>
+		<link rel="stylesheet" href="../HTML5 beadandó/javascript/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="../HTML5 beadandó/javascript/bootstrap/css/bootstrap-theme.min.css">
+		<script src="../HTML5 beadandó/javascript/bootstrap/js/bootstrap.min.js"></script>
+		<script src="../HTML5 beadandó/javascript/storeip.js"></script>
+	</head>
+	<body>
+		<div class="jumbotron text-center">
+			<h1>Zsolti sportoldala</h1>
+			<nav class="navbar navbar-default">
+				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+					<ul class="nav navbar-nav">
+						<li><a href="index.html">Sport <span class="sr-only">(current)</span></a></li>
+						<li class="active"><a href="seria.html">Széria</a></li>
+					</ul>
+				</div>
+			</nav>
+		</div>
+		<div class="container">
+			<div class = "panel panel-default">
+				<div class = "panel-body">
+					<div id = "tablediv">
+					
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="ipmodal" class="modal fade">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+						<h4 class="modal-title">Backend szükséges</h4>
+					</div>
+					<form id="sportaddform">
+						<div class="modal-body">
+							<table>
+								<tr>
+									<td>IP:</td>
+									<td><input name="ip" type="text" id="iptext"></td>
+								</tr>
+							</table>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">Bezárás</button>
+							<button type="button" class="btn btn-primary" onclick="setip()">Mentés</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
+
+<script>
+	$( document ).ready(function() {
+			if( typeof ip === 'undefined' || ip === null || ip==="" ){
+				showipdialog();
+			}
+			getSeriaData();
+			window.setInterval("getSeriaData()", 15000);
+		});
+	function getSeriaData(){
+				$.ajax({
+						url: 'http://'+window.ip+':8080/sport/rest/seria/entity/all',
+						type: 'GET',
+						success: function(data, status) {
+						serias=data;
+						tablamegjelenites(data);
+						}
+					});
+				}	
+	function tablamegjelenites(data){
+			var tablediv = document.getElementById("tablediv");
+			while(tablediv.firstChild){
+				tablediv.removeChild(tablediv.firstChild);
+			}
+			var sportdb = data.length;
+			var tbl = document.createElement('table');
+			tbl.classList.add("table-striped");
+			tbl.classList.add("table");
+			var tablehead = document.createElement('thead');
+			var tablerow = document.createElement('tr');
+			var theadid = document.createElement('th');
+			var theadname = document.createElement('th');
+			var theaddesc = document.createElement('th');
+			var theadreszletek = document.createElement('th');
+			
+			theadid.appendChild(document.createTextNode("ID"));
+			theadname.appendChild(document.createTextNode("Név"));
+			theaddesc.appendChild(document.createTextNode("Leírás"));
+			theadreszletek.appendChild(document.createTextNode("Részletek"));
+			tablehead.appendChild(theadid);
+			tablehead.appendChild(theadname);
+			tablehead.appendChild(theaddesc);
+			tablehead.appendChild(theadreszletek);
+			tbl.appendChild(tablehead);
+			var tbody = document.createElement('tbody');
+			for(var i = 0;i<sportdb;i++){
+				var tr = document.createElement('tr');
+				
+				var idtd=document.createElement('td');
+				var nametd=document.createElement('td');
+				var desctd=document.createElement('td');
+				var buttontd=document.createElement('td');
+				
+				idtd.appendChild(document.createTextNode(data[i].id));
+				nametd.appendChild(document.createTextNode(data[i].name));
+				desctd.appendChild(document.createTextNode(data[i].description));
+				
+				var reszletekbutton=document.createElement("a");
+				reszletekbutton.appendChild(document.createTextNode("Részletek"));
+				reszletekbutton.setAttribute("href" ,"sportreszletek.html?sportid="+data[i].id);
+				reszletekbutton.setAttribute("target", "new");
+				buttontd.appendChild(reszletekbutton);
+				
+				tr.appendChild(idtd);
+				tr.appendChild(nametd);
+				tr.appendChild(desctd);
+				tr.appendChild(buttontd);
+				
+				tbody.appendChild(tr);
+			}
+			tbl.appendChild(tbody);
+			tablediv.appendChild(tbl);
+		}
+		function refresh(){
+			getSeriaData();
+		}
+</script>
